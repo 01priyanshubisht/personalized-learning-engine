@@ -1,0 +1,62 @@
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+env/
+
+# =========================
+# Environment files
+# =========================
+.env
+.env.*
+!.env.example
+
+# =========================
+# Backend generated data
+# =========================
+backend/data/knowledge.db
+backend/data/chroma/
+backend/data/documents/
+
+# Keep directory structure
+!backend/data/
+!backend/data/documents/.gitkeep
+
+# =========================
+# Frontend
+# =========================
+node_modules/
+dist/
+build/
+.vite/
+
+# Frontend environment
+frontend/.env
+frontend/.env.local
+
+# =========================
+# IDE
+# =========================
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# =========================
+# OS
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Logs
+# =========================
+*.log
