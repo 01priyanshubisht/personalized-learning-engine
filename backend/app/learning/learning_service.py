@@ -86,21 +86,21 @@ class LearningService:
 
         if use_previous_material:
 
-            known_concepts = [
+            queries = [
                 gap.concept
                 for gap in gaps
                 if gap.known
             ]
+            if topic not in queries:
+                queries.append(topic)
 
-            if known_concepts:
-
-                retrieved_material = (
-                    self.learning_retriever.retrieve_for_concepts(
-                        learner_id=learner_id,
-                        concepts=known_concepts,
-                        top_k_per_concept=2,
-                    )
+            retrieved_material = (
+                self.learning_retriever.retrieve_for_concepts(
+                    learner_id=learner_id,
+                    concepts=queries,
+                    top_k_per_concept=2,
                 )
+            )
 
         # -------------------------------------------------
         # 5. Generate personalized teaching

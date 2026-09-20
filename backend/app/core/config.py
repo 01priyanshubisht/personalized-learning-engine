@@ -15,6 +15,9 @@ class Settings(BaseSettings):
 
     allowed_file_types: tuple[str, ...] = (".pdf",)
 
+    gemini_api_key: str | None = Field(default=None, validation_alias="GEMINI_API_KEY")
+    gemini_model: str = Field(default="gemini-3.5-flash-lite", validation_alias="GEMINI_MODEL")
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

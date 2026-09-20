@@ -158,30 +158,34 @@ const History = () => {
                     </div>
                     {/* Card */}
                     <div className="w-[calc(100%-3rem)] md:w-[calc(50%-2.5rem)] ml-auto md:ml-0 p-5 rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-                      <div className="flex justify-between items-start mb-2">
-                        <h3 className="font-bold text-gray-900 text-lg leading-tight">
-                          {entry.activity_type === 'TOPIC_STUDIED' ? entry.topic : entry.document_id || 'Study Material'}
+                      <div className="flex justify-between items-start gap-2 mb-2">
+                        <h3 className="font-bold text-gray-900 text-lg leading-tight break-words">
+                          {entry.activity_type === 'TOPIC_STUDIED' ? entry.topic : 'Study Material Upload'}
                         </h3>
-                        <span className="text-xs font-medium text-gray-400 bg-gray-50 px-2 py-1 rounded-md">
+                        <span className="text-xs font-medium text-gray-400 bg-gray-50 px-2 py-1 rounded-md shrink-0">
                           {new Date(entry.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>
                       <p className="text-sm text-gray-500 mb-3">
-                        {entry.activity_type === 'TOPIC_STUDIED' ? 'Learned a new topic' : 'Added to knowledge base'}
+                        {entry.activity_type === 'TOPIC_STUDIED' ? 'Learned a new topic' : (
+                          <span>
+                            Added to knowledge base
+                            {entry.document_id && (
+                              <span className="ml-2 font-mono text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded border border-indigo-100/60 inline-block max-w-[180px] truncate align-middle">
+                                ID: {entry.document_id}
+                              </span>
+                            )}
+                          </span>
+                        )}
                       </p>
                       
                       {entry.concepts && entry.concepts.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-gray-50">
-                          {entry.concepts.slice(0, 5).map((concept, idx) => (
-                            <span key={idx} className="px-2 py-1 bg-indigo-50 text-indigo-700 text-xs rounded-md font-medium border border-indigo-100">
+                        <div className="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-gray-100">
+                          {entry.concepts.map((concept, idx) => (
+                            <span key={idx} className="px-2.5 py-1 bg-indigo-50/80 hover:bg-indigo-100 text-indigo-700 text-xs rounded-lg font-medium border border-indigo-100/60 transition-colors">
                               {concept}
                             </span>
                           ))}
-                          {entry.concepts.length > 5 && (
-                            <span className="px-2 py-1 bg-gray-50 text-gray-500 text-xs rounded-md font-medium">
-                              +{entry.concepts.length - 5}
-                            </span>
-                          )}
                         </div>
                       )}
                     </div>

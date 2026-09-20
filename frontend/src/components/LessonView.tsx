@@ -13,6 +13,21 @@ interface LessonViewProps {
   topic: string;
 }
 
+const renderFormattedText = (text: string) => {
+  if (!text) return null;
+  const parts = text.split(/(\*\*.*?\*\*)/g);
+  return parts.map((part, index) => {
+    if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
+      return (
+        <strong key={index} className="font-semibold text-gray-900">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    return part;
+  });
+};
+
 const LessonView = ({ lessonData, topic }: LessonViewProps) => {
   const { gaps, retrieved_material, lesson } = lessonData;
 
@@ -126,7 +141,7 @@ const LessonView = ({ lessonData, topic }: LessonViewProps) => {
                   {/* LESSON INTRO */}
                   <div className="pb-8 border-b border-gray-100">
                     <h2 className="text-3xl font-bold mb-6">{lesson.topic}</h2>
-                    <p className="text-xl leading-relaxed text-gray-600">{lesson.introduction}</p>
+                    <p className="text-xl leading-relaxed text-gray-600">{renderFormattedText(lesson.introduction)}</p>
                   </div>
 
                   {/* LESSON SECTIONS */}
@@ -136,7 +151,7 @@ const LessonView = ({ lessonData, topic }: LessonViewProps) => {
                         <span className="bg-indigo-100 text-indigo-700 w-8 h-8 rounded-lg flex items-center justify-center text-sm mr-3">{idx + 1}</span>
                         {section.title}
                       </h3>
-                      <p className="leading-relaxed text-gray-700 whitespace-pre-wrap">{section.content}</p>
+                      <p className="leading-relaxed text-gray-700 whitespace-pre-wrap">{renderFormattedText(section.content)}</p>
                     </div>
                   ))}
 
@@ -147,7 +162,7 @@ const LessonView = ({ lessonData, topic }: LessonViewProps) => {
                         <CheckCircle2 className="w-6 h-6 mr-2 text-green-500" />
                         Summary
                       </h3>
-                      <p className="leading-relaxed text-gray-700 whitespace-pre-wrap">{lesson.summary}</p>
+                      <p className="leading-relaxed text-gray-700 whitespace-pre-wrap">{renderFormattedText(lesson.summary)}</p>
                     </div>
                   )}
 

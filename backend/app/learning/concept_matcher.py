@@ -53,6 +53,9 @@ class ConceptMatcher:
         required_canonical = self.canonicalize(
             required_concept
         )
+        required_words = set(
+            w for w in self.normalize(required_concept).split() if len(w) > 2
+        )
 
         for learner_concept in learner_concepts:
 
@@ -63,19 +66,51 @@ class ConceptMatcher:
             learner_canonical = self.canonicalize(
                 learner_name
             )
-
-            if learner_canonical != required_canonical:
-                continue
-
-            return ConceptMatch(
-                required_concept=required_concept,
-                matched_concept=learner_name,
-                known=True,
-                evidence=learner_concept.get(
-                    "evidence"
-                ),
-                match_type="exact_or_alias",
+            learner_words = set(
+                w for w in self.normalize(learner_name).split() if len(w) > 2
             )
+
+            if learner_canonical == required_canonical:
+                return ConceptMatch(
+                    required_concept=required_concept,
+                    matched_concept=learner_name,
+                    known=True,
+                    evidence=learner_concept.get(
+                        "evidence"
+                    ),
+                    match_type="exact_or_alias",
+                )
+
+            if (
+                len(required_canonical) > 3
+                and (
+                    required_canonical in learner_canonical
+                    or learner_canonical in required_canonical
+                )
+            ):
+                return ConceptMatch(
+                    required_concept=required_concept,
+                    matched_concept=learner_name,
+                    known=True,
+                    evidence=learner_concept.get(
+                        "evidence"
+                    ),
+                    match_type="substring_match",
+                )
+
+            common = (required_words & learner_words) - {
+                "data", "structure", "system", "basic", "concept"
+            }
+            if common:
+                return ConceptMatch(
+                    required_concept=required_concept,
+                    matched_concept=learner_name,
+                    known=True,
+                    evidence=learner_concept.get(
+                        "evidence"
+                    ),
+                    match_type="word_overlap",
+                )
 
         return ConceptMatch(
             required_concept=required_concept,

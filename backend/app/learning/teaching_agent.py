@@ -1,7 +1,11 @@
 import json
+import os
 
-import ollama
+from google import genai
+from google.genai import types
+from tenacity import retry, stop_after_attempt, wait_exponential
 
+from app.core.config import get_settings
 from app.learning.learning_plan import LearningStep
 from app.schemas.teaching import (
     TeachingResponse,
@@ -26,9 +30,25 @@ class TeachingAgent:
 
     def __init__(
         self,
-        model: str = "llama3.2:3b",
+        model: str | None = None,
+        api_key: str | None = None,
     ) -> None:
-        self.model = model
+        settings = get_settings()
+        self.model = (
+            model
+            or os.getenv("GEMINI_MODEL")
+            or getattr(settings, "gemini_model", "gemini-2.5-flash")
+            or "gemini-2.5-flash"
+        )
+        self.api_key = (
+            api_key
+            or os.getenv("GEMINI_API_KEY")
+            or getattr(settings, "gemini_api_key", None)
+        )
+        if self.api_key:
+            self.client = genai.Client(api_key=self.api_key)
+        else:
+            self.client = genai.Client()
 
     def teach(
         self,
@@ -200,25 +220,28 @@ Rules:
 """
 
         # -----------------------------------------
-        # Call Ollama
+        # Call Gemini
         # -----------------------------------------
 
-        response = ollama.chat(
-            model=self.model,
-            messages=[
-                {
-                    "role": "user",
-                    "content": prompt,
-                }
-            ],
-            options={
-                "temperature": 0,
-            },
+        @retry(
+            stop=stop_after_attempt(5),
+            wait=wait_exponential(multiplier=1, min=2, max=10),
+            reraise=True,
         )
+        def _generate_with_retry():
+            return self.client.models.generate_content(
+                model=self.model,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    temperature=0.0,
+                    automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
+                ),
+            )
 
-        raw_content = response["message"][
-            "content"
-        ].strip()
+        response = _generate_with_retry()
+
+        raw_content = response.text.strip()
 
         # -----------------------------------------
         # Clean possible markdown fences

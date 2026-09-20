@@ -1,8 +1,12 @@
 import json
 import logging
+import os
 
-from ollama import Client
+from google import genai
+from google.genai import types
+from tenacity import retry, stop_after_attempt, wait_exponential
 
+from app.core.config import get_settings
 from app.schemas.learning import TopicRequirements
 
 
@@ -13,12 +17,26 @@ class RequirementAgent:
 
     def __init__(
         self,
-        model_name: str = "llama3.2:3b",
-        host: str = "http://localhost:11434",
+        model_name: str | None = None,
+        api_key: str | None = None,
     ) -> None:
 
-        self.model_name = model_name
-        self.client = Client(host=host)
+        settings = get_settings()
+        self.model_name = (
+            model_name
+            or os.getenv("GEMINI_MODEL")
+            or getattr(settings, "gemini_model", "gemini-2.5-flash")
+            or "gemini-2.5-flash"
+        )
+        self.api_key = (
+            api_key
+            or os.getenv("GEMINI_API_KEY")
+            or getattr(settings, "gemini_api_key", None)
+        )
+        if self.api_key:
+            self.client = genai.Client(api_key=self.api_key)
+        else:
+            self.client = genai.Client()
 
     def analyze(self, topic: str) -> TopicRequirements:
 
@@ -212,20 +230,37 @@ Required format:
 }}
 """
 
-        response = self.client.chat(
-            model=self.model_name,
-            messages=[
-                {
-                    "role": "user",
-                    "content": prompt,
-                }
-            ],
-            options={
-                "temperature": 0,
-            },
+        @retry(
+            stop=stop_after_attempt(5),
+            wait=wait_exponential(multiplier=1, min=2, max=10),
+            reraise=True,
         )
+        def _generate_with_retry():
+            return self.client.models.generate_content(
+                model=self.model_name,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    temperature=0.0,
+                    automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
+                ),
+            )
 
-        content = response["message"]["content"].strip()
+        response = _generate_with_retry()
+
+        content = response.text.strip()
+
+        if content.startswith("```json"):
+            content = content[7:].strip()
+        elif content.startswith("```"):
+            content = content[3:].strip()
+        if content.endswith("```"):
+            content = content[:-3].strip()
+
+        start = content.find("{")
+        end = content.rfind("}")
+        if start != -1 and end != -1:
+            content = content[start : end + 1]
 
         try:
 
