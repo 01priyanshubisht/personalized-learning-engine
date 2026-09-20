@@ -160,10 +160,11 @@ Deterministic services handle matching, gap detection, retrieval, and study hist
 * FastAPI
 * Pydantic
 * SQLite
-* ChromaDB
+* AWS OpenSearch
 * Sentence Transformers
 * PyMuPDF
 * Ollama
+* AWS S3 
 
 ## Frontend
 
